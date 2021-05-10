@@ -7,4 +7,11 @@ A lightweight Student Manager. Intended for my Computer Science III class but ca
 - Easy Student Addition/Removal
 - Lightweight
 
-![](https://i.imgur.com/3bR7uQD.png)
+Utilizes these Datastructures:
+- ArrayList
+- BinaryTree
+- Stack
+- Matrix
+- Satic Array
+
+[https://i.imgur.com/vPBpPV4.png](https://i.imgur.com/vPBpPV4.png)
