@@ -154,6 +154,7 @@ public class MainMenu implements Serializable {
             BinaryTree bt = new BinaryTree();
             for (Student student : studentList) {
                 bt.add(student);
+                // All Student Objects added to Binary Tree
             }
             bt.traverseInOrder(bt.root);
             JOptionPane.showMessageDialog(panel1, bt.beautify());

@@ -37,7 +37,6 @@ public class Student {
         ArrayList<Double> major = new ArrayList<>();
         grades.add(daily);
         grades.add(major);
-
         weirdFix();
     }
 
@@ -52,7 +51,9 @@ public class Student {
         }
     }
 
-    public Double getAverage() {
+    public double getAverage() { return average; }
+
+    public Double getCalculatedAverage() {
         double dailyavg = 0;
         double majoravg = 0;
         for(int i = 0; i < grades.get(0).size(); i++) {

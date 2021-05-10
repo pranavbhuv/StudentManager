@@ -31,11 +31,13 @@ class BinaryTree {
     private void visit(double value, String name) {
         stack.push(name + " : " + value + " \n");
     }
+
     public String beautify() {
         StringBuilder temp = new StringBuilder();
         for (int i = stack.size() - 1; i >= 0; i--) {
             temp.append(stack.get(i));
         }
+        System.out.println(temp.toString());
         return temp.toString();
     }
     public void resetStack() {
