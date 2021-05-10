@@ -14,7 +14,7 @@ public class StudentManager {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
-        frame.setSize(1000,520);
+        frame.setSize(1000,600);
 
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
     }

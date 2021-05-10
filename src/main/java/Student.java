@@ -36,6 +36,10 @@ public class Student implements Serializable {
         return name;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public void addGrade(double grade) {
         grades.add(grade);
     }
