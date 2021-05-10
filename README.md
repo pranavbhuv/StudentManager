@@ -14,4 +14,4 @@ Utilizes these Datastructures:
 - Matrix
 - Satic Array
 
-[url]https://i.imgur.com/vPBpPV4.png[/url]
+<img src="https://i.imgur.com/vPBpPV4.png">
