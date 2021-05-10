@@ -1,5 +1,9 @@
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.uiDesigner.core.Spacer;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
 
 import javax.swing.*;
 import java.awt.*;
@@ -7,6 +11,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 import javax.swing.JOptionPane;
 
@@ -22,7 +27,6 @@ public class MainMenu implements Serializable {
     private JTextArea textArea1;
     private JTextField gradeAdd;
     private JButton submitButton;
-    private JPanel listView;
     private JComboBox<String> studentSelect;
     private JComboBox<String> deleteStudent;
     private JButton submitButton1;
@@ -32,14 +36,15 @@ public class MainMenu implements Serializable {
     private JButton saveButton;
     private JButton rankingsButton;
     private JButton button2;
+    private JComboBox<String> dailyOrMajor;
 
-    public ArrayList<Student> studentList = new ArrayList<Student>();
+    public ArrayList<Student> studentList = new ArrayList<>();
 
     private final String pathway = ".//data//data.txt";
+
     private final String formatter = "\t%-20.20s\t %-8.8s\t %-6.6s\t %-2.5s\t %-2.5s\n";
 
     MainMenu() {
-        textArea1.append(String.format(formatter, "Full Name", "Average", "Gender", "Age", "Notes") + "\n");
 
         File tempFile = new File(pathway);
         boolean exists = tempFile.exists();
@@ -56,138 +61,141 @@ public class MainMenu implements Serializable {
                 } catch (Exception ignored) {
                 }
             } else if (dialogResult == 1) {
+                textArea1.append(String.format(formatter, "Full Name", "Average", "Gender", "Age", "Notes") + "\n");
                 studentList.add(new Student());
+                refresh();
             }
         } else {
+            textArea1.append(String.format(formatter, "Full Name", "Average", "Gender", "Age", "Notes") + "\n");
             studentList.add(new Student());
+            refresh();
         }
 
         neverChange();
         comboSetter();
-        populate();
 
-        addStudentButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    studentList.add(new Student(name.getText(), Double.parseDouble(gpa.getText()), Objects.requireNonNull(gender.getSelectedItem()).toString(), Integer.parseInt(Objects.requireNonNull(age.getSelectedItem()).toString()), notes.getText()));
-                    addButton(studentList.size() - 1);
-                } catch (Exception err) {
-                    JOptionPane.showMessageDialog(panel1, "Please Input Values Before Registering");
-                    throw err;
-                }
+        addStudentButton.addActionListener(e -> {
+            try {
+                studentList.add(new Student(name.getText(), Double.parseDouble(gpa.getText()), Objects.requireNonNull(gender.getSelectedItem()).toString(), Integer.parseInt(Objects.requireNonNull(age.getSelectedItem()).toString()), notes.getText()));
+                addButton(studentList.size() - 1);
+            } catch (Exception err) {
+                JOptionPane.showMessageDialog(panel1, "Please Input Values Before Registering");
+                throw err;
             }
         });
-        submitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                for (Student student : studentList) {
-                    if (student.toString().equals(studentSelect.getSelectedItem())) {
-                        student.addGrade(Double.parseDouble(gradeAdd.getText()));
+        submitButton.addActionListener(e -> {
+            for (Student student : studentList) {
+                if (student.getName().equals(studentSelect.getSelectedItem())) {
+                    int decider;
+                    if (Objects.requireNonNull(dailyOrMajor.getSelectedItem()).toString().equals("Daily")) {
+                        decider = 0;
+                    } else {
+                        decider = 1;
                     }
+                    student.addGrade(Double.parseDouble(gradeAdd.getText()), decider);
+                    JOptionPane.showMessageDialog(panel1, "Added Grade.");
                 }
-                refresh();
+            }
+            refresh();
+        });
+        submitButton1.addActionListener(e -> {
+            for (int i = 0; i < studentList.size(); i++) {
+                if (studentList.get(i).getName().equals(deleteStudent.getSelectedItem())) {
+                    studentList.remove(i);
+                    break;
+                }
+            }
+            studentSelect.removeAllItems();
+            deleteStudent.removeAllItems();
+            viewStudent.removeAllItems();
+            comboSetter();
+            refresh();
+        });
+        submitButton2.addActionListener(e -> {
+            int index = 0;
+            for (int i = 0; i < studentList.size(); i++) {
+                if (studentList.get(i).getName().equals(viewStudent.getSelectedItem())) {
+                    index = i;
+                }
+            }
+            JOptionPane.showMessageDialog(panel1, studentList.get(index).detailedView());
+        });
+        randomFillButton.addActionListener(e -> {
+            for (int i = 0; i < 12; i++) {
+                randomFill(i);
+            }
+            studentSelect.removeAllItems();
+            deleteStudent.removeAllItems();
+            viewStudent.removeAllItems();
+            comboSetter();
+            refresh();
+        });
+        saveButton.addActionListener(e -> {
+            try {
+                Arrays.stream(Objects.requireNonNull(new File(".//data//list//").listFiles())).forEach(File::delete);
+                PrintWriter pw = new PrintWriter(new FileOutputStream(pathway));
+                for (Student temp : studentList) {
+                    pw.println(temp.name);
+                    DumperOptions options = new DumperOptions();
+                    options.setIndent(2);
+                    options.setPrettyFlow(true);
+                    options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+                    Yaml yaml = new Yaml(options);
+                    PrintWriter writer = new PrintWriter(new File(".//data//list//" + temp.getName() + ".yml"));
+                    yaml.dump(temp, writer);
+                }
+                pw.close();
+                JOptionPane.showMessageDialog(panel1, "Saved Students");
+            } catch (IOException error) {
+                error.printStackTrace();
             }
         });
-        submitButton1.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                for (int i = 0; i < studentList.size(); i++) {
-                    if (studentList.get(i).toString().equals(deleteStudent.getSelectedItem())) {
-                        studentList.remove(i);
-                        break;
-                    }
-                }
-                studentSelect.removeAllItems();
-                deleteStudent.removeAllItems();
-                viewStudent.removeAllItems();
-                comboSetter();
-                refresh();
+        rankingsButton.addActionListener(e -> {
+            BinaryTree bt = new BinaryTree();
+            for (Student student : studentList) {
+                bt.add(student);
             }
-        });
-        submitButton2.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int index = 0;
-                for (int i = 0; i < studentList.size(); i++) {
-                    if (studentList.get(i).toString().equals(viewStudent.getSelectedItem())) {
-                        index = i;
-                    }
-                }
-                JOptionPane.showMessageDialog(panel1, studentList.get(index).detailedView());
-            }
-        });
-        randomFillButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                for (int i = 0; i < 12; i++) {
-                    randomFill(i);
-                }
-                studentSelect.removeAllItems();
-                deleteStudent.removeAllItems();
-                viewStudent.removeAllItems();
-                comboSetter();
-                refresh();
-            }
-        });
-        saveButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    PrintWriter pw = new PrintWriter(new FileOutputStream(pathway));
-                    for (int i = 0; i < studentList.size(); i++) {
-                        Student temp = studentList.get(i);
-                        pw.println(temp.name + ":" + temp.average + ":" + temp.gender + ":" + temp.age + ":" + temp.notes);
-                    }
-                    pw.close();
-                    JOptionPane.showMessageDialog(panel1, "Saved Students");
-                } catch (IOException error) {
-                    error.printStackTrace();
-                }
-            }
-        });
-        rankingsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                BinaryTree bt = new BinaryTree();
-                for (Student student : studentList) {
-                    bt.add(student);
-                }
-                bt.traverseInOrder(bt.root);
-                JOptionPane.showMessageDialog(panel1, bt.beautify());
-                bt.resetStack();
-            }
+            bt.traverseInOrder(bt.root);
+            JOptionPane.showMessageDialog(panel1, bt.beautify());
+            bt.resetStack();
         });
     }
 
     public void load() throws IOException {
-        FileInputStream fstream = new FileInputStream(pathway);
+        FileInputStream fstream = new FileInputStream(".//data//data.txt");
         BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
         String strLine;
         while ((strLine = br.readLine()) != null) {
-            String[] arrOfStr = strLine.split(":", 5);
-            studentList.add(new Student(arrOfStr[0], Double.parseDouble(arrOfStr[1]), arrOfStr[2], Integer.parseInt(arrOfStr[3]), arrOfStr[4]));
+            InputStream inputStream = new FileInputStream(new File(".//data//list//" + strLine + ".yml"));
+            Yaml yaml = new Yaml(new Constructor(Student.class));
+            Student data = yaml.load(inputStream);
+            studentList.add(data);
+            System.out.println(data.getName() + " object made.");
+            populate(studentList.indexOf(data));
         }
         fstream.close();
     }
 
-    public void populate() {
-        Student def = studentList.get(0);
+    public void populate(int i) {
+        Student def = studentList.get(i);
         textArea1.append(String.format(formatter, def.name, def.average, def.gender, def.age, def.notes));
     }
 
     public void addButton(int i) {
         Student def = studentList.get(i);
         textArea1.append(String.format(formatter, def.name, def.average, def.gender, def.age, def.notes));
-        studentSelect.addItem(studentList.get(i).toString());
-        deleteStudent.addItem(studentList.get(i).toString());
-        viewStudent.addItem(studentList.get(i).toString());
+        studentSelect.addItem(studentList.get(i).getName());
+        deleteStudent.addItem(studentList.get(i).getName());
+        viewStudent.addItem(studentList.get(i).getName());
     }
 
     public void neverChange() {
         gender.addItem("Male");
         gender.addItem("Female");
         gender.addItem("Other");
+
+        dailyOrMajor.addItem("Daily");
+        dailyOrMajor.addItem("Major");
 
         for (int i = 11; i < 22; i++) {
             age.addItem(i);
@@ -196,9 +204,9 @@ public class MainMenu implements Serializable {
 
     public void comboSetter() {
         for (Student student : studentList) {
-            studentSelect.addItem(student.toString());
-            deleteStudent.addItem(student.toString());
-            viewStudent.addItem(student.toString());
+            studentSelect.addItem(student.getName());
+            deleteStudent.addItem(student.getName());
+            viewStudent.addItem(student.getName());
         }
     }
 
@@ -303,7 +311,7 @@ public class MainMenu implements Serializable {
         label7.setText("Add Grade");
         panel6.add(label7, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel7 = new JPanel();
-        panel7.setLayout(new GridLayoutManager(2, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panel7.setLayout(new GridLayoutManager(2, 3, new Insets(0, 0, 0, 0), -1, -1));
         panel6.add(panel7, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JLabel label8 = new JLabel();
         label8.setText("Student");
@@ -314,7 +322,9 @@ public class MainMenu implements Serializable {
         label9.setText("Grade");
         panel7.add(label9, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         gradeAdd = new JTextField();
-        panel7.add(gradeAdd, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        panel7.add(gradeAdd, new GridConstraints(1, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        dailyOrMajor = new JComboBox();
+        panel7.add(dailyOrMajor, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         submitButton = new JButton();
         submitButton.setText("Submit");
         panel6.add(submitButton, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -352,6 +362,8 @@ public class MainMenu implements Serializable {
         submitButton2 = new JButton();
         submitButton2.setText("Submit");
         panel1.add(submitButton2, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer1 = new Spacer();
+        panel1.add(spacer1, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
     }
 
     /**

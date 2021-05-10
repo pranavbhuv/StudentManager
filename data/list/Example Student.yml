@@ -1,0 +1,9 @@
+!!Student
+age: 17
+average: 100.0
+gender: Male
+grades:
+- - 100.0
+- - 100.0
+name: Example Student
+notes: This is an example student.
